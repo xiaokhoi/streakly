@@ -13,11 +13,12 @@ class LeaderboardController extends Controller
         $start = now()->startOfWeek();
         $end   = now()->endOfWeek();
 
-        $ranked = User::select(
+                $ranked = User::select(
                 'users.id',
                 'users.name',
                 'users.level',
                 'users.badge_id',
+                'users.avatar',
                 DB::raw('SUM(xp_events.amount) as weekly_xp')
             )
             ->join('xp_events', 'xp_events.user_id', '=', 'users.id')

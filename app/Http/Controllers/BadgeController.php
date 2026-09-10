@@ -26,7 +26,7 @@ class BadgeController extends Controller
 
         $request->user()->update(['badge_id' => $badge->id]);
 
-        return redirect()->route('badges.index')->with('worn', $badge);
+        return redirect()->route('badges.index')->with('worn', $badge->name);
     }
 
     public function remove(Request $request)

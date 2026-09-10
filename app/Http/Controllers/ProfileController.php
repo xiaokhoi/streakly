@@ -11,16 +11,28 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function edit(Request $request): View
+        public function edit(Request $request): View
     {
+        $user = $request->user();
+
         $badges = Badge::orderBy('required_streak')->get();
-        $earnedIds = $request->user()->badges->pluck('id')->toArray();
+        $earnedIds = $user->badges->pluck('id')->toArray();
+
+        // ===== HEATMAP: hari-hari aktif 15 minggu terakhir =====
+        $activeDays = \App\Models\CheckIn::where('user_id', $user->id)
+            ->where('checked_at', '>=', now()->subDays(104)->startOfDay())
+            ->selectRaw('DATE(checked_at) as day')
+            ->distinct()
+            ->pluck('day')
+            ->flip(); // di-flip biar lookup $activeDays->has($date) super cepet
 
         return view('profile.edit', [
-            'user'          => $request->user(),
+            'user'          => $user,
             'badges'        => $badges,
             'earnedIds'     => $earnedIds,
-            'habitsCount'   => $request->user()->habits()->count(),
+            'habitsCount'   => $user->habits()->count(),
+            'activeDays'    => $activeDays,
+            'activeCount'   => $activeDays->count(),
         ]);
     }
 

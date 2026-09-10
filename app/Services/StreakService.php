@@ -128,10 +128,14 @@ class StreakService
             XpService::award($user, 'milestone', "Milestone {$user->current_streak} hari! 🎉");
 
             // ===== BADGE =====
-            $badge = \App\Models\Badge::where('required_streak', $user->current_streak)->first();
+                        $badge = \App\Models\Badge::where('required_streak', $user->current_streak)->first();
             if ($badge && !$user->badges->contains($badge->id)) {
                 $user->badges()->attach($badge->id, ['earned_at' => now()]);
-                session()->flash('new_badge', $badge);
+                session()->flash('new_badge', [
+                    'icon'        => $badge->icon,
+                    'name'        => $badge->name,
+                    'description' => $badge->description,
+                ]);
             }
 
             return $user->current_streak;
