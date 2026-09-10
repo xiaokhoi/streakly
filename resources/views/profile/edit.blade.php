@@ -51,6 +51,11 @@
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1">Habit</p>
                     </div>
                 </div>
+                <a href="{{ route('graves.index') }}" class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-neutral-800 text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">🪦 Makam streak</span>
+                    <span class="text-gray-400">›</span>
+                </a>
+                
             </div>
         </div>
         

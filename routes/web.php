@@ -1,7 +1,18 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\{DashboardController, CheckInController, HabitController, ExploreController, BadgeController, LeaderboardController, FriendController, ChatController, SettingsController, RecapController};
+use App\Http\Controllers\{DashboardController, 
+                            CheckInController, 
+                            HabitController, 
+                            ExploreController,
+                            BadgeController, 
+                            LeaderboardController, 
+                            FriendController, 
+                            ChatController, 
+                            SettingsController, 
+                            RecapController,
+                            GraveController
+                         };
 use Illuminate\Support\Facades\Route;
 
 
@@ -63,6 +74,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
 
     Route::get('/recap', [RecapController::class, 'show'])->name('recap.show');
+
+    Route::get('/graves', [GraveController::class, 'index'])->name('graves.index');
 });
 
 require __DIR__.'/auth.php';

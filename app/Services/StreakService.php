@@ -63,6 +63,16 @@ class StreakService
 
     public static function hangus(User $user, Pet $pet): void
     {
+        // makamkan streak yang mati — biar kenangannya gak hilang 🪦
+        if ($user->current_streak > 0) {
+            \App\Models\StreakGrave::create([
+                'user_id' => $user->id,
+                'length'  => $user->current_streak,
+                'died_at' => today(),
+                'cause'   => 'bolong',
+            ]);
+        }
+
         $user->update(['current_streak' => 0]);
         $pet->update(['stage' => 0, 'status' => 'alive']);
     }
