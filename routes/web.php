@@ -78,6 +78,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/graves', [GraveController::class, 'index'])->name('graves.index');
 
+    Route::get('/memories', [GraveController::class, 'memories'])->name('memories.index');
+    
     Route::middleware('can:admin')->prefix('admin')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('admin.index');
         Route::post('/avatars', [AdminController::class, 'storeAvatar'])->name('admin.avatars.store');

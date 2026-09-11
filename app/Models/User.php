@@ -64,16 +64,16 @@ class User extends Authenticatable
         return $this->belongsTo(Badge::class, 'badge_id');
     }
 
-            public function friendships()
+        public function friendships()
     {
         return Friendship::query()
             ->where(fn ($q) => $q->where('user_id', $this->id)
                 ->orWhere('friend_id', $this->id));
     }
-
-    public function streakGraves()
+    
+        public function checkIns(): HasMany
     {
-        return $this->hasMany(\App\Models\StreakGrave::class);
+        return $this->hasMany(\App\Models\CheckIn::class);
     }
 
     public function hasStreakInDanger(): bool
