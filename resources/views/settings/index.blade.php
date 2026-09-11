@@ -43,17 +43,20 @@
                 <div>
                     <p class="text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wide">Avatar</p>
                     <div class="grid grid-cols-3 gap-2">
-                        @foreach(['sun', 'cat', 'robot', 'ghost', 'panda', 'alien'] as $avatarType)
-                            <label class="cursor-pointer">
-                                <input type="radio" name="avatar" value="{{ $avatarType }}" class="peer sr-only"
-                                    @checked(old('avatar', auth()->user()->avatar) === $avatarType)>
-                                <div class="rounded-lg border-2 border-gray-200 dark:border-neutral-800 p-2.5 flex items-center justify-center
-                                    peer-checked:border-yellow-400 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-950/30
-                                    hover:border-gray-300 dark:hover:border-neutral-700 transition">
-                                    <x-avatar :type="$avatarType" class="w-11 h-11" />
-                                </div>
-                            </label>
-                        @endforeach
+                                                <div class="grid grid-cols-4 gap-2">
+                            @foreach(range(0, 19) as $i)
+                                @php $avatarType = sprintf('%02d', $i); @endphp
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="avatar" value="{{ $avatarType }}" class="peer sr-only"
+                                        @checked(old('avatar', auth()->user()->avatar) === $avatarType)>
+                                    <div class="rounded-lg border-2 border-gray-200 dark:border-neutral-800 p-1.5 flex items-center justify-center
+                                        peer-checked:border-yellow-400 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-950/30
+                                        hover:border-gray-300 dark:hover:border-neutral-700 transition">
+                                        <x-avatar :type="$avatarType" class="w-11 h-11" />
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 

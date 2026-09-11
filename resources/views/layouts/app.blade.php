@@ -47,7 +47,7 @@
                             <span class="text-sm font-bold">{{ auth()->user()->current_streak }}</span>
                         </a>
                         <a href="{{ route('profile.edit') }}" class="w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
-                            <x-avatar :type="auth()->user()->avatar" class="w-7 h-7" />
+                                <x-avatar :type="auth()->user()?->avatar ?? '01'" class="w-7 h-7" />
                         </a>
                     @else
                         <a href="{{ route('login') }}" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 text-sm font-bold px-4 py-1.5 rounded-full transition">Masuk</a>

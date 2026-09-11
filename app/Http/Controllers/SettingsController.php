@@ -18,12 +18,11 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        $validated = $request->validate([
+            $validated = $request->validate([
             'name'   => 'required|string|max:255',
             'email'  => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'avatar' => 'nullable|in:sun,cat,robot,ghost,panda,alien',
+            'avatar' => ['nullable', 'regex:/^(0[0-9]|1[0-9])$/'],
         ]);
-
         $user->fill($validated);
 
         if ($request->filled('avatar')) {

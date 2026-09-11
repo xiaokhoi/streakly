@@ -11,7 +11,8 @@ use App\Http\Controllers\{DashboardController,
                             ChatController, 
                             SettingsController, 
                             RecapController,
-                            GraveController
+                            GraveController,
+                            AdminController
                          };
 use Illuminate\Support\Facades\Route;
 
@@ -76,6 +77,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/recap', [RecapController::class, 'show'])->name('recap.show');
 
     Route::get('/graves', [GraveController::class, 'index'])->name('graves.index');
+
+    Route::middleware('can:admin')->prefix('admin')->group(function () {
+        Route::get('/', [AdminController::class, 'index'])->name('admin.index');
+        Route::post('/avatars', [AdminController::class, 'storeAvatar'])->name('admin.avatars.store');
+        Route::delete('/avatars/{filename}', [AdminController::class, 'destroyAvatar'])->name('admin.avatars.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

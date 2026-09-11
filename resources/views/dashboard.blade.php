@@ -38,8 +38,8 @@
         <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg mb-3 overflow-hidden hover:border-gray-400 dark:hover:border-neutral-700 transition">
 
             <div class="flex items-center gap-2 px-3 py-2.5 text-xs text-gray-500">
-                <div class="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center overflow-hidden">
-                    <x-avatar :type="$pet->stage === 0 ? 'sun' : 'cat'" class="w-5 h-5" />
+                                <div class="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-xs">
+                    {{ $pet->emoji() }}
                 </div>
                 <span class="font-bold text-gray-700 dark:text-gray-300">r/petmu</span>
                 <span>•</span>
