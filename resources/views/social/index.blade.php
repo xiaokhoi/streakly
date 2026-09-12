@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="max-w-2xl mx-auto px-3 pt-4">
 
-        <h1 class="text-lg font-extrabold text-gray-900 dark:text-gray-100 mb-3">Chat</h1>
+        <h1 class="text-lg font-extrabold text-gray-900 dark:text-gray-100 mb-3">💬 Chat</h1>
 
         {{-- BANNER --}}
         @if(session('requestSent'))
@@ -17,7 +17,7 @@
             </div>
         @endif
 
-        {{-- ===== PERMINTAAN MASUK ===== --}}
+        {{-- PERMINTAAN MASUK --}}
         @if($pendings->count())
             <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg mb-3 overflow-hidden">
                 <div class="px-3 py-2.5 border-b border-gray-100 dark:border-neutral-800">
@@ -25,7 +25,7 @@
                 </div>
                 @foreach($pendings as $pending)
                     <div class="flex items-center gap-3 px-3 py-3 border-b border-gray-50 dark:border-neutral-800 last:border-0">
-                        <x-avatar :type="$pending->requester->avatar" class="w-10 h-10 shrink-0" />
+                        <x-avatar :email="$pending->requester->email" class="w-10 h-10 shrink-0" />
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{{ $pending->requester->name }}</p>
                             <p class="text-xs text-gray-400">mau jadi streak partner lu</p>
@@ -45,11 +45,11 @@
             </div>
         @endif
 
-        {{-- ===== CARI TEMEN ===== --}}
+        {{-- CARI TEMEN --}}
         <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg p-3 mb-3">
             <h2 class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2.5">Cari streak partner</h2>
             <form action="{{ route('social.search') }}" method="GET" class="flex gap-2">
-                <input type="text" name="q" value="{{ $searched ?? '' }}" placeholder="Nama atau email temen lu..." required minlength="3"
+                <input type="text" name="q" value="{{ $searched ?? '' }}" placeholder="Nama, username, atau email temen lu..." required minlength="3"
                     class="flex-1 bg-gray-100 dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-500 rounded-full px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-yellow-400">
                 <button class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-sm px-5 rounded-full active:scale-95 transition">Cari</button>
             </form>
@@ -58,8 +58,11 @@
                 <div class="mt-3 space-y-2">
                     @forelse($results as $result)
                         <div class="flex items-center gap-2.5 bg-gray-50 dark:bg-neutral-800 rounded-lg p-2.5">
-                            <x-avatar :type="$result->avatar" class="w-9 h-9 shrink-0" />
-                            <span class="text-sm font-bold text-gray-900 dark:text-gray-100 flex-1 min-w-0 truncate">{{ $result->name }}</span>
+                            <x-avatar :email="$result->email" class="w-9 h-9 shrink-0" />
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{{ $result->name }}</p>
+                                <p class="text-[10px] text-gray-400">@{{ $result->username }}</p>
+                            </div>
                             <form action="{{ route('social.store') }}" method="POST" class="flex items-center gap-1.5 shrink-0">
                                 @csrf
                                 <input type="hidden" name="friend_id" value="{{ $result->id }}">
@@ -78,7 +81,7 @@
             @endisset
         </div>
 
-        {{-- ===== INBOX: STREAK BARENG ===== --}}
+        {{-- INBOX: STREAK BARENG --}}
         <h2 class="text-xs font-bold uppercase tracking-wide text-gray-500 px-1 mb-2">Streak bareng</h2>
 
         <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg overflow-hidden">
@@ -91,7 +94,7 @@
                 <a href="{{ route('chat.show', $friendship) }}"
                     class="flex items-center gap-3 px-3 py-3 border-b border-gray-50 dark:border-neutral-800 last:border-0 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition">
                     <div class="relative shrink-0">
-                        <x-avatar :type="$partner->avatar" class="w-12 h-12" />
+                        <x-avatar :email="$partner->email" class="w-12 h-12" />
                         @if(!$mutualToday && $friendship->streak_count > 0)
                             <span class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 border-2 border-white dark:border-neutral-900 rounded-full"></span>
                         @endif

@@ -1,9 +1,11 @@
 <x-app-layout>
     <div class="max-w-2xl mx-auto px-3 pt-4">
+    
+        <h1 class="text-lg font-extrabold text-gray-900 dark:text-gray-100 mb-3">🛠️ Admin</h1>
 
-        <h1 class="text-lg font-extrabold text-gray-900 dark:text-gray-100 mb-1">🛠️ Admin · Avatar</h1>
+        <x-admin-tabs />
+
         <p class="text-xs text-gray-400 mb-3">Upload PNG dari galeri — otomatis bernomor lanjutan</p>
-
         {{-- BANNER --}}
         @if(session('uploaded'))
             <div class="bg-white dark:bg-neutral-900 border border-yellow-400 dark:border-yellow-600 rounded-lg p-3 mb-3 text-sm flex items-center gap-2">

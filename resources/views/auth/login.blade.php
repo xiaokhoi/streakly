@@ -1,16 +1,18 @@
 <x-guest-layout>
     <h1 class="text-xl font-extrabold text-gray-900 dark:text-gray-100 mb-1">Masuk</h1>
-    <p class="text-xs text-gray-400 mb-5">Lanjutin streak-mu sebelum hangus 🔥</p>
+    <p class="text-xs text-gray-400 mb-4">Lanjutin streak-mu sebelum hangus 🔥</p>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    <x-social-buttons />
 
     <form method="POST" action="{{ route('login') }}" class="space-y-4">
         @csrf
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1.5 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="email@kamu.com" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-input-label for="login" value="username atau email" />
+            <x-text-input id="login" class="block mt-1.5 w-full" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" placeholder="username atau email@kamu.com" />
+            <x-input-error :messages="$errors->get('login')" class="mt-2" />
         </div>
 
         <div>
@@ -25,7 +27,7 @@
         </div>
 
         <label class="inline-flex items-center">
-            <input id="remember_me" type="checkbox" class="rounded dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 text-yellow-500 focus:ring-yellow-400" name="remember">
+            <input id="remember_me" type="checkbox" class="rounded dark:bg-neutral-800 border-gray-300 dark:border-neutral-600 text-yellow-500 focus:ring-yellow-400" name="remember">
             <span class="ms-2 text-sm text-gray-500">Ingat aku</span>
         </label>
 

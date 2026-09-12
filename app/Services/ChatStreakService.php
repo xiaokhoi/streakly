@@ -40,7 +40,7 @@ class ChatStreakService
         }
 
         // bolong >= 2 hari? reset dulu, streak mulai dari 1 lagi
-        if ($lastMutualDate && Carbon::parse($lastMutualDate)->diffInDays(today()) >= 2) {
+                if ($friendship->last_mutual_date && Carbon::parse($friendship->last_mutual_date)->diffInDays(today()) > GameSettings::chatMissDays()) {
             $friendship->update(['streak_count' => 0]);
         }
 

@@ -3,99 +3,16 @@
 namespace App\Services;
 
 use App\Models\CheckIn;
-use App\Models\Pet;
 use App\Models\User;
-use App\Services\XpService;
-use Carbon\Carbon;
 
 class StreakService
 {
-    public const MILESTONES = [1, 7, 14, 30, 100, 365];
-
-    public const PET_STAGES = [
-        0   => '🥚',
-        1   => '🐣',
-        7   => '🐥',
-        14  => '🐤',
-        30  => '🦅',
-        100 => '🐲',
-        365 => '🐉',
-    ];
-
-    public static function stageFor(int $streak): int
-    {
-        $stage = 0;
-        foreach (self::MILESTONES as $m) {
-            if ($streak >= $m) {
-                $stage = $m;
-            }
-        }
-        return $stage;
-    }
-
-    public static function refresh(User $user): void
-    {
-        if ($user->recovery_month !== now()->format('Y-m')) {
-            $user->update([
-                'recovery_month'  => now()->format('Y-m'),
-                'recovery_tokens' => 3,
-            ]);
-        }
-
-        $pet = $user->pet ?? Pet::create(['user_id' => $user->id]);
-
-        if (!$user->last_check_in || $user->current_streak === 0) {
-            return;
-        }
-
-        $gap = Carbon::parse($user->last_check_in)->diffInDays(today());
-
-        if ($gap === 1) {
-            if ($user->recovery_tokens > 0) {
-                $pet->update(['status' => 'fainted']);
-            } else {
-                self::hangus($user, $pet);
-            }
-        } elseif ($gap >= 2) {
-            self::hangus($user, $pet);
-        }
-    }
-
-    public static function hangus(User $user, Pet $pet): void
-    {
-        // makamkan streak yang mati — biar kenangannya gak hilang 🪦
-        if ($user->current_streak > 0) {
-            \App\Models\StreakGrave::create([
-                'user_id' => $user->id,
-                'length'  => $user->current_streak,
-                'died_at' => today(),
-                'cause'   => 'bolong',
-            ]);
-        }
-
-        $user->update(['current_streak' => 0]);
-        $pet->update(['stage' => 0, 'status' => 'alive']);
-    }
-
-    public static function recover(User $user): bool
-    {
-        $pet = $user->pet;
-
-        if (!$pet || $pet->status !== 'fainted' || $user->recovery_tokens < 1) {
-            return false;
-        }
-
-        $user->decrement('recovery_tokens');
-        $pet->update(['status' => 'alive']);
-
-        return true;
-    }
-
+    /** Pintu utama check-in (app atau habit). Return milestone kalau baru tercapai. */
     public static function checkIn(User $user, ?string $note = null, ?int $habitId = null): ?int
     {
-        $pet = $user->pet;
+        $pet = PetService::ensure($user);
 
-        if ($pet?->status === 'fainted') {
+        if ($pet->status === 'fainted') {
             return null;
         }
 
@@ -126,31 +43,59 @@ class StreakService
         $user->last_check_in  = today();
         $user->save();
 
-        $newStage = self::stageFor($user->current_streak);
-        if ($newStage > $pet->stage) {
-            $pet->update(['stage' => $newStage, 'status' => 'alive']);
-        }
+        PetService::evolveIfNeeded($user, $pet);
 
-                // ===== XP =====
         XpService::award($user, $habitId ? 'checkin_habit' : 'checkin_app', "Check-in hari ke-{$user->current_streak}");
 
-        if (in_array($user->current_streak, self::MILESTONES)) {
-            XpService::award($user, 'milestone', "Milestone {$user->current_streak} hari! 🎉");
+        $milestone = MilestoneService::handle($user);
 
-            // ===== BADGE =====
-                        $badge = \App\Models\Badge::where('required_streak', $user->current_streak)->first();
-            if ($badge && !$user->badges->contains($badge->id)) {
-                $user->badges()->attach($badge->id, ['earned_at' => now()]);
-                session()->flash('new_badge', [
-                    'icon'        => $badge->icon,
-                    'name'        => $badge->name,
-                    'description' => $badge->description,
-                ]);
-            }
+        return $milestone ?? null;
+    }
 
-            return $user->current_streak;
+    /** Hari berat: hadir versi minimum — streak aman, TANPA makan recovery token */
+    public static function hardDay(User $user): bool
+    {
+        if (!$user->canUseHardDay()) {
+            return false;
         }
 
-        return null;
+        $alreadyToday = $user->last_check_in && $user->last_check_in->isToday();
+
+        CheckIn::create([
+            'user_id'    => $user->id,
+            'habit_id'   => null,
+            'checked_at' => now(),
+            'note'       => '🫂 hari berat — tapi aku tetep dateng',
+        ]);
+
+        if (!$alreadyToday) {
+            if ($user->last_check_in && $user->last_check_in->isYesterday()) {
+                $user->current_streak++;
+            } else {
+                $user->current_streak = 1;
+            }
+
+            $user->longest_streak = max($user->longest_streak, $user->current_streak);
+            $user->last_check_in  = today();
+            $user->save();
+
+            XpService::award($user, 'checkin_app', "Hari berat — tetep hadir (streak {$user->current_streak})");
+        }
+
+        $user->increment('hard_days_used');
+
+        return true;
+    }
+
+    // ===== delegasi: signature lama tetep jalan, controller gak perlu diubah =====
+
+    public static function refresh(User $user): void
+    {
+        RecoveryService::refresh($user);
+    }
+
+    public static function recover(User $user): bool
+    {
+        return RecoveryService::recover($user);
     }
 }

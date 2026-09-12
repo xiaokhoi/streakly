@@ -24,4 +24,14 @@ class CheckInController extends Controller
 
         return redirect()->route('dashboard');
     }
+
+    public function hardDay(Request $request)
+    {
+        $ok = StreakService::hardDay($request->user());
+
+        return redirect()->route('dashboard')->with(
+            $ok ? 'hardDayDone' : 'hardDayFailed',
+            true
+        );
+    }
 }

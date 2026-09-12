@@ -20,9 +20,10 @@ class FriendController extends Controller
         $results = User::where('id', '!=', $request->user()->id)
             ->where(fn ($query) => $query
                 ->where('name', 'like', "%{$q}%")
-                ->orWhere('email', 'like', "%{$q}%"))
+                ->orWhere('email', 'like', "%{$q}%")
+                ->orWhere('username', 'like', "%{$q}%"))
             ->limit(5)
-            ->get(['id', 'name', 'avatar']);
+            ->get(['id', 'name', 'username', 'email']);
 
         return view('social.index', array_merge(
             $this->indexData($request),

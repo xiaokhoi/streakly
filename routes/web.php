@@ -12,13 +12,19 @@ use App\Http\Controllers\{DashboardController,
                             SettingsController, 
                             RecapController,
                             GraveController,
-                            AdminController
+                            AdminController,
+                            LetterController,
+                            CommunityController
                          };
 use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
-    return redirect()->route(auth()->check() ? 'dashboard' : 'register');
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return view('landing');
 });
 
 Route::get('/dashboard', DashboardController::class)
@@ -80,11 +86,49 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/memories', [GraveController::class, 'memories'])->name('memories.index');
     
+    Route::get('/letters', [LetterController::class, 'index'])->name('letters.index');
+    Route::get('/letters/{letter}', [LetterController::class, 'show'])->name('letters.show');
+    Route::post('/letters', [LetterController::class, 'store'])->name('letters.store');
+    
+    Route::post('/recover', [CheckInController::class, 'recover'])->name('checkin.recover');
+    Route::post('/hard-day', [CheckInController::class, 'hardDay'])->name('checkin.hardday');
+    
+    Route::get('/community', [CommunityController::class, 'index'])->name('community.index');
+    Route::get('/community/post/{post}', [CommunityController::class, 'detail'])->name('community.detail');
+    Route::post('/community/{post}/comment', [CommunityController::class, 'comment'])->name('community.comment');
+    Route::delete('/community/comment/{comment}', [CommunityController::class, 'destroyComment'])->name('community.comment.destroy');
+    Route::post('/community/comment/{comment}/fire', [CommunityController::class, 'fire'])->name('community.fire');
+    Route::post('/community/report', [CommunityController::class, 'report'])->name('community.report');
+    Route::get('/community/{category}', [CommunityController::class, 'show'])->name('community.show');
+    Route::post('/community', [CommunityController::class, 'store'])->name('community.store');
+    Route::delete('/community/{post}', [CommunityController::class, 'destroy'])->name('community.destroy');
+    Route::post('/community/{post}/vote', [CommunityController::class, 'vote'])->name('community.vote');
+});
+    
     Route::middleware('can:admin')->prefix('admin')->group(function () {
-        Route::get('/', [AdminController::class, 'index'])->name('admin.index');
+        Route::redirect('/', '/admin/users');
+
+        Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
+        Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
+
+        Route::get('/posts', [AdminController::class, 'posts'])->name('admin.posts');
+        Route::delete('/posts/{post}', [AdminController::class, 'destroyPost'])->name('admin.posts.destroy');
+        Route::delete('/comments/{comment}', [AdminController::class, 'destroyComment'])->name('admin.comments.destroy');
+
+        Route::get('/categories', [AdminController::class, 'categories'])->name('admin.categories');
+        Route::post('/categories', [AdminController::class, 'storeCategory'])->name('admin.categories.store');
+        
+        Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
+        Route::post('/settings', [AdminController::class, 'storeSettings'])->name('admin.settings.store');
+
+        Route::get('/avatars', [AdminController::class, 'avatars'])->name('admin.avatars');
         Route::post('/avatars', [AdminController::class, 'storeAvatar'])->name('admin.avatars.store');
         Route::delete('/avatars/{filename}', [AdminController::class, 'destroyAvatar'])->name('admin.avatars.destroy');
-    });
+        
+        Route::get('/reports', [AdminController::class, 'reports'])->name('admin.reports');
+        Route::delete('/reports/{report}/dismiss', [AdminController::class, 'dismissReport'])->name('admin.reports.dismiss');
+        Route::delete('/reports/{report}/resolve', [AdminController::class, 'resolveReport'])->name('admin.reports.resolve');
+    
 });
 
 require __DIR__.'/auth.php';

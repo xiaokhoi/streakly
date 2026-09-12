@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\StreakService;
+use App\Services\PetService;
 use Illuminate\Database\Eloquent\Model;
 
 class Pet extends Model
@@ -11,6 +11,6 @@ class Pet extends Model
 
     public function emoji(): string
     {
-        return StreakService::PET_STAGES[$this->stage] ?? '🥚';
+        return PetService::PET_STAGES[$this->stage] ?? '🥚';
     }
 }

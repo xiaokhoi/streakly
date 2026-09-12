@@ -47,7 +47,7 @@ class RecapController extends Controller
             ->inRandomOrder()
             ->first();
 
-        return view('recap.show', [
+        return view('progress.recap', [
             'checkinDays' => $checkinDays,
             'weeklyXp'    => $weeklyXp,
             'topHabit'    => $topHabit,

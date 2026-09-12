@@ -26,7 +26,7 @@ class ProfileController extends Controller
             ->pluck('day')
             ->flip(); // di-flip biar lookup $activeDays->has($date) super cepet
 
-        return view('profile.edit', [
+        return view('users.profile', [
             'user'          => $user,
             'badges'        => $badges,
             'earnedIds'     => $earnedIds,

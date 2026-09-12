@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Friendship;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -16,6 +14,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'current_streak',
@@ -26,8 +25,9 @@ class User extends Authenticatable
         'xp',
         'level',
         'badge_id',
-        'avatar',
-        
+        'hard_days_used',
+        'hard_days_month',
+        'google_id',
     ];
 
     protected $hidden = [
@@ -49,31 +49,51 @@ class User extends Authenticatable
         return $this->hasOne(Pet::class);
     }
 
-        public function habits(): HasMany
+    public function habits(): HasMany
     {
         return $this->hasMany(Habit::class);
     }
 
-        public function badges()
+    public function badges()
     {
         return $this->belongsToMany(Badge::class)->withPivot('earned_at');
     }
 
-        public function title()
+    public function title()
     {
         return $this->belongsTo(Badge::class, 'badge_id');
     }
 
-        public function friendships()
+    public function friendships()
     {
         return Friendship::query()
             ->where(fn ($q) => $q->where('user_id', $this->id)
                 ->orWhere('friend_id', $this->id));
     }
-    
-        public function checkIns(): HasMany
+
+    public function streakGraves()
     {
-        return $this->hasMany(\App\Models\CheckIn::class);
+        return $this->hasMany(StreakGrave::class);
+    }
+
+    public function checkIns(): HasMany
+    {
+        return $this->hasMany(CheckIn::class);
+    }
+
+    public function letters()
+    {
+        return $this->hasMany(Letter::class);
+    }
+
+    public function xpForNextLevel(): int
+    {
+        return $this->level * 100;
+    }
+
+    public function xpProgress(): int
+    {
+        return min(100, (int) (($this->xp / $this->xpForNextLevel()) * 100));
     }
 
     public function hasStreakInDanger(): bool
@@ -86,16 +106,5 @@ class User extends Authenticatable
                   ->orWhereDate('last_mutual_date', '!=', today());
             })
             ->exists();
-    }
-
-
-    public function xpForNextLevel(): int
-    {
-        return $this->level * 100;
-    }
-
-    public function xpProgress(): int
-    {
-        return min(100, (int) (($this->xp / $this->xpForNextLevel()) * 100));
     }
 }

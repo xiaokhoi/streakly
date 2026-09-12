@@ -8,7 +8,7 @@
         .confetti { position: fixed; top: -5vh; font-size: 1.2rem; animation: fall 3s linear forwards; pointer-events: none; z-index: 50; }
     </style>
 
-    <div class="max-w-2xl mx-auto px-3 pt-4">
+    <div class="max-w-2xl mx-auto px-3 pt-4" x-data="{ tab: 'all' }">
 
         {{-- BANNER: ADOPT --}}
         @if(session('adopted'))
@@ -34,13 +34,24 @@
             </div>
         @endif
 
+        {{-- BANNER: HARI BERAT --}}
+        @if(session('hardDayDone'))
+            <div class="bg-white dark:bg-neutral-900 border border-yellow-400 dark:border-yellow-600 rounded-lg p-3 mb-3 text-sm flex items-center gap-2">
+                <span class="text-xl">🫂</span>
+                <span>Hari berat tercatat. Streak aman — peluk buat lu hari ini.</span>
+            </div>
+        @endif
+        @if(session('hardDayFailed'))
+            <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg p-3 mb-3 text-sm">
+                Kuota hari berat bulan ini udah habis. Besok coba lagi ya 🫂
+            </div>
+        @endif
+
         {{-- ===== KARTU PET + CHECK-IN ===== --}}
         <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg mb-3 overflow-hidden hover:border-gray-400 dark:hover:border-neutral-700 transition">
 
             <div class="flex items-center gap-2 px-3 py-2.5 text-xs text-gray-500">
-                                <div class="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-xs">
-                    {{ $pet->emoji() }}
-                </div>
+                <div class="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-xs">{{ $pet->emoji() }}</div>
                 <span class="font-bold text-gray-700 dark:text-gray-300">r/petmu</span>
                 <span>•</span>
                 <span>naik level tiap milestone streak</span>
@@ -91,6 +102,20 @@
             </div>
         </div>
 
+        {{-- HARI BERAT --}}
+        @if(!$checkedToday && $pet->status !== 'fainted' && now()->hour >= 15 && auth()->user()->canUseHardDay())
+            <div class="bg-white dark:bg-neutral-900 border border-dashed border-gray-300 dark:border-neutral-700 rounded-lg p-3 mb-3 text-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Hari ini berat banget? Gak apa-apa.</p>
+                <form action="{{ route('checkin.hardday') }}" method="POST"
+                    onsubmit="return confirm('Tandai hari berat? Streak tetep aman, tapi kuota berkurang (sisa {{ auth()->user()->hardDaysRemaining() }}/2 bulan ini).')">
+                    @csrf
+                    <button class="text-xs font-bold text-gray-600 dark:text-gray-300 underline">
+                        🫂 Check-in versi hari berat ({{ auth()->user()->hardDaysRemaining() }}/2)
+                    </button>
+                </form>
+            </div>
+        @endif
+
         {{-- WARNING MALAM --}}
         @if(!$checkedToday && $pet->status !== 'fainted' && now()->hour >= 21)
             <div class="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-3 mb-3 text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
@@ -98,51 +123,202 @@
                 Pet-mu belum diberi makan hari ini — mepet jam 12!
             </div>
         @endif
-
-        {{-- ===== FEED HABIT ===== --}}
-        <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg mb-3">
+        
+                {{-- ===== KALENDER STREAK MINGGUAN (ala duolingo) ===== --}}
+        <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg mb-3 overflow-hidden">
             <div class="flex items-center justify-between px-3 py-2.5 border-b border-gray-100 dark:border-neutral-800">
-                <h2 class="text-xs font-bold uppercase tracking-wide text-gray-500">Habit hari ini</h2>
-                <span class="text-xs text-gray-400">{{ $checkedHabitIds ? count($checkedHabitIds) : 0 }}/{{ $habits->count() }}</span>
+                <h2 class="text-xs font-bold uppercase tracking-wide text-gray-500">Streak minggu ini</h2>
+                <div class="flex items-center gap-1 bg-gray-100 dark:bg-neutral-800 rounded-full px-2.5 py-1">
+                    <svg class="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>
+                    <span class="text-xs font-extrabold">{{ auth()->user()->current_streak }}</span>
+                </div>
             </div>
 
-            @forelse($habits as $habit)
-                @php $done = in_array($habit->id, $checkedHabitIds); @endphp
-                <div class="flex items-center gap-2 px-2 py-2.5 border-b border-gray-50 dark:border-neutral-800 last:border-0 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition">
-                    @if(!$done)
-                        <form action="{{ route('habits.toggle', $habit) }}" method="POST">
-                            @csrf
-                            @method('PATCH')
-                            <button class="w-9 h-9 rounded-md hover:bg-yellow-100 dark:hover:bg-yellow-950/40 flex items-center justify-center text-gray-400 hover:text-yellow-500 transition" aria-label="Centang">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                            </button>
-                        </form>
-                    @else
-                        <div class="w-9 h-9 flex items-center justify-center text-yellow-500">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <div class="px-3 py-4">
+                <div class="flex justify-between gap-1.5">
+                    @foreach($weekDays as $day)
+                        <div class="flex flex-col items-center gap-1.5 flex-1">
+                            {{-- kotak hari --}}
+                            <div class="w-full aspect-square rounded-xl flex items-center justify-center text-2xl relative transition
+                                {{ $day['active']
+                                    ? 'bg-yellow-400 shadow-md shadow-yellow-400/40'
+                                    : ($day['isToday']
+                                        ? 'bg-gray-200 dark:bg-neutral-800 border-2 border-dashed border-yellow-400/60'
+                                        : 'bg-gray-100 dark:bg-neutral-800') }}">
+                                @if($day['active'])
+                                    {{ $pet->emoji() }}
+                                    @if($day['isToday'])
+                                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-gray-900 dark:bg-white rounded-full border-2 border-white dark:border-neutral-900"></span>
+                                    @endif
+                                @elseif($day['isToday'])
+                                    <span class="text-xs font-bold text-yellow-600">?</span>
+                                @endif
+                            </div>
+                            {{-- label huruf hari --}}
+                            <span class="text-[10px] font-bold {{ $day['isToday'] ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-400' }}">
+                                {{ $day['letter'] }}
+                            </span>
                         </div>
-                    @endif
-
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium {{ $done ? 'text-gray-400' : 'text-gray-900 dark:text-gray-100' }} truncate">{{ $habit->name }}</p>
-                        <p class="text-[11px] text-gray-400">{{ $habit->category?->icon }} {{ $habit->category?->name ?? 'Tanpa kategori' }}</p>
-                    </div>
-
-                    <form action="{{ route('habits.destroy', $habit) }}" method="POST"
-                        onsubmit="return confirm('Hapus habit "{{ $habit->name }}"?')">
-                        @csrf
-                        @method('DELETE')
-                        <button class="w-8 h-8 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-500 transition" aria-label="Hapus">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                        </button>
-                    </form>
+                    @endforeach
                 </div>
-            @empty
-                <p class="text-gray-400 text-sm text-center py-6">Belum ada habit — pencet + di bawah</p>
-            @endforelse
+
+                <p class="text-xs text-gray-400 mt-3 text-center">
+                    @if($checkedToday)
+                        🔥 Hari ini udah nyala — streak <span class="font-extrabold text-gray-600 dark:text-gray-300">{{ auth()->user()->current_streak }} hari</span>!
+                    @else
+                        Check-in hari ini buat nyalain kotak terakhir!
+                    @endif
+                </p>
+            </div>
         </div>
 
-        {{-- ===== MENU CEPAT: recap + share ===== --}}
+        {{-- ===== TASK LIST HABIT (ala TailAdmin) ===== --}}
+        @php
+            $doneCount = count($checkedHabitIds);
+            $todoCount = $habits->count() - $doneCount;
+        @endphp
+        <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg mb-3 overflow-hidden">
+
+            {{-- TAB BAR --}}
+            <div class="flex items-center gap-1.5 p-2 border-b border-gray-100 dark:border-neutral-800 overflow-x-auto">
+                <button @click="tab = 'all'"
+                    :class="tab === 'all' ? 'bg-gray-900 text-white dark:bg-yellow-400 dark:text-gray-900' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800'"
+                    class="text-[11px] font-bold px-3 py-1.5 rounded-full transition whitespace-nowrap">
+                    Semua ({{ $habits->count() }})
+                </button>
+                <button @click="tab = 'todo'"
+                    :class="tab === 'todo' ? 'bg-gray-900 text-white dark:bg-yellow-400 dark:text-gray-900' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800'"
+                    class="text-[11px] font-bold px-3 py-1.5 rounded-full transition whitespace-nowrap">
+                    Belum ({{ $todoCount }})
+                </button>
+                <button @click="tab = 'done'"
+                    :class="tab === 'done' ? 'bg-gray-900 text-white dark:bg-yellow-400 dark:text-gray-900' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800'"
+                    class="text-[11px] font-bold px-3 py-1.5 rounded-full transition whitespace-nowrap">
+                    Selesai ({{ $doneCount }})
+                </button>
+            </div>
+
+            {{-- PROGRESS RINGkas --}}
+            @if($habits->count() > 0)
+                <div class="px-3 pt-3">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-gray-400">Progress hari ini</p>
+                        <p class="text-[11px] font-extrabold text-gray-500">{{ $doneCount }}/{{ $habits->count() }}</p>
+                    </div>
+                    <div class="h-2 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-yellow-400 rounded-full transition-all duration-500"
+                            style="width: {{ $habits->count() > 0 ? round($doneCount / $habits->count() * 100) : 0 }}%"></div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- LIST --}}
+            <div class="p-2">
+                @forelse($habits as $habit)
+                    @php $done = in_array($habit->id, $checkedHabitIds); @endphp
+                    <div x-show="tab === 'all' || (tab === 'done' && {{ $done ? 'true' : 'false' }}) || (tab === 'todo' && {{ $done ? 'false' : 'true' }})"
+                        class="flex items-center gap-2.5 px-2 py-3 rounded-lg mb-1 border transition
+                            {{ $done
+                                ? 'bg-yellow-50/60 dark:bg-yellow-950/10 border-yellow-200/60 dark:border-yellow-900/40'
+                                : 'border-transparent hover:bg-gray-50 dark:hover:bg-neutral-800/50 hover:border-gray-200 dark:hover:border-neutral-700' }}">
+
+                        {{-- checkbox ala task app --}}
+                        @if(!$done)
+                            <form action="{{ route('habits.toggle', $habit) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <button class="w-6 h-6 rounded-md border-2 border-gray-300 dark:border-neutral-600 hover:border-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/40 active:scale-90 transition flex items-center justify-center text-transparent hover:text-yellow-500 shrink-0" aria-label="Selesaikan">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                </button>
+                            </form>
+                        @else
+                            <span class="w-6 h-6 rounded-md bg-yellow-400 text-gray-900 flex items-center justify-center shrink-0" title="Selesai">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                            </span>
+                        @endif
+
+                        {{-- teks task --}}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold truncate {{ $done ? 'text-gray-400' : 'text-gray-900 dark:text-gray-100' }}">
+                                {{ $habit->name }}
+                            </p>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="text-[10px] text-gray-400 flex items-center gap-0.5">
+                                    {{ $habit->category?->icon }} {{ $habit->category?->name ?? 'Tanpa kategori' }}
+                                </span>
+                                @if($done)
+                                    <span class="text-[9px] font-extrabold text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-950/50 rounded-full px-2 py-0.5 uppercase tracking-wide">Selesai</span>
+                                @else
+                                    <span class="text-[9px] font-extrabold text-gray-400 bg-gray-100 dark:bg-neutral-800 rounded-full px-2 py-0.5 uppercase tracking-wide">To do</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- hapus --}}
+                        <form action="{{ route('habits.destroy', $habit) }}" method="POST"
+                            onsubmit="return confirm('Hapus habit "{{ $habit->name }}"?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="w-8 h-8 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-500 transition shrink-0" aria-label="Hapus">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                            </button>
+                        </form>
+                    </div>
+                @empty
+                    <div class="py-8 text-center">
+                        <p class="text-4xl mb-2">📋</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 font-bold">Belum ada habit</p>
+                        <p class="text-xs text-gray-400 mt-1">Pencet + di bawah buat mulai!</p>
+                    </div>
+                @endforelse
+            </div>
+
+            {{-- empty state per-tab --}}
+            @if($habits->count() > 0)
+                <p x-show="tab === 'todo' && {{ $todoCount }} === 0" class="text-center text-xs text-gray-400 py-4">
+                    🎉 Semua habit udah dikerjain hari ini — mantaap!
+                </p>
+                <p x-show="tab === 'done' && {{ $doneCount }} === 0" class="text-center text-xs text-gray-400 py-4">
+                    Belum ada yang selesai — centang satu, mulai dari yang gampang!
+                </p>
+            @endif
+        </div>
+        
+                {{-- ===== PANTAU AKTIVITAS HABIT (ala steam playtime) ===== --}}
+        <div class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg mb-3 overflow-hidden">
+            <div class="px-3 py-2.5 border-b border-gray-100 dark:border-neutral-800">
+                <h2 class="text-xs font-bold uppercase tracking-wide text-gray-500">Pantau aktivitas lu</h2>
+            </div>
+
+            <div class="p-3 space-y-3">
+                @forelse($habits as $habit)
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-neutral-800 flex items-center justify-center text-base shrink-0">
+                                    {{ $habit->category?->icon ?? '📋' }}
+                                </span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{{ $habit->name }}</span>
+                            </div>
+                            <span class="text-[11px] font-extrabold text-yellow-500 shrink-0">{{ $habit->month_count }}x</span>
+                        </div>
+                        <div class="h-2.5 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-yellow-400 rounded-full transition-all duration-500" style="width: {{ $habit->bar_width }}%"></div>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-xs text-gray-400 text-center py-2">Belum ada habit buat dipantau</p>
+                @endforelse
+
+                @if($habits->count() > 0)
+                    <p class="text-[11px] text-gray-400 flex items-center gap-1 pt-1">
+                        🎯 Dikerjakan <span class="font-extrabold text-gray-600 dark:text-gray-300">{{ $monthTotal }}x</span> bulan ini
+                    </p>
+                @endif
+            </div>
+        </div>
+
+        {{-- ===== MENU CEPAT ===== --}}
         <div class="grid grid-cols-2 gap-3 mb-3">
             <a href="{{ route('recap.show') }}"
                 class="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 rounded-lg p-3.5 flex items-center gap-2.5 hover:border-yellow-400 dark:hover:border-yellow-600 transition">

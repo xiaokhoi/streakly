@@ -13,7 +13,7 @@ class BadgeController extends Controller
 
         $earnedIds = $request->user()->badges->pluck('id')->toArray();
 
-        return view('badges.index', [
+        return view('progress.badges', [
             'badges'    => $badges,
             'earnedIds' => $earnedIds,
         ]);
@@ -26,13 +26,13 @@ class BadgeController extends Controller
 
         $request->user()->update(['badge_id' => $badge->id]);
 
-        return redirect()->route('badges.index')->with('worn', $badge->name);
+        return redirect()->route('progress.badges')->with('worn', $badge->name);
     }
 
     public function remove(Request $request)
     {
         $request->user()->update(['badge_id' => null]);
 
-        return redirect()->route('badges.index');
+        return redirect()->route('progress.badges');
     }
 }

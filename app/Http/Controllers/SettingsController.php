@@ -11,23 +11,21 @@ class SettingsController extends Controller
 {
     public function index()
     {
-        return view('settings.index');
+        return view('users.settings');
     }
 
     public function updateProfile(Request $request)
     {
         $user = $request->user();
 
-            $validated = $request->validate([
-            'name'   => 'required|string|max:255',
-            'email'  => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'avatar' => ['nullable', 'regex:/^(0[0-9]|1[0-9])$/'],
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'username' => ['required', 'string', 'min:3', 'max:30', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id)],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
         ]);
-        $user->fill($validated);
 
-        if ($request->filled('avatar')) {
-            $user->avatar = $request->avatar;
-        }
+        $validated['username'] = strtolower($validated['username']);
+        $user->fill($validated);
 
         // email diganti? reset verifikasi, biar aman
         if ($user->isDirty('email')) {

@@ -1,8 +1,10 @@
+@props(['email' => null, 'class' => 'w-10 h-10'])
+
 @php
-    // valid: 00 sampai 19 (file public/avatars/avatar-XX.png)
-    // nilai lama (sun, cat, dll) atau aneh-aneh -> fallback ke 01
-    $valid = is_string($type) && preg_match('/^(0[0-9]|1[0-9])$/', $type);
-    $file = $valid ? 'avatar-' . $type : 'avatar-01';
+    // gravatar: hash md5 dari email lowercase + ukuran 128px
+    $hash = md5(strtolower(trim($email ?? '')));
+    $url = 'https://gravatar.com/avatar/' . $hash . '?s=128&d=identicon';
 @endphp
 
-<img src="{{ asset('avatars/' . $file . '.png') }}" alt="Avatar" {{ $attributes->merge(['class' => 'w-10 h-10 rounded-full object-cover object-top']) }}>
+<img src="{{ $url }}" alt="Avatar" loading="lazy"
+    {{ $attributes->merge(['class' => $class . ' rounded-full object-cover bg-gray-200 dark:bg-neutral-800']) }}>

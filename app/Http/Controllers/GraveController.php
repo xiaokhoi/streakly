@@ -12,7 +12,7 @@ class GraveController extends Controller
             ->orderByDesc('length')
             ->get();
 
-                return view('graves.index', [
+                return view('memories.index', [
             'graves'   => $graves,
             'longest'  => $request->user()->longest_streak,
         ]);
